@@ -1,0 +1,60 @@
+## wirte a reactjs code for portfolio website
+
+import React, { useState, useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
+
+const PortfolioPage = () => {
+  const [currentPage, setCurrentPage] = useState('home');
+  const history = useHistory();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentPage]);
+
+  const changePage = (newPage) => {
+    setCurrentPage(newPage);
+    history.push(`/${newPage}`);
+  };
+
+  return (
+    <div>
+      <h1>My Portfolio</h1>
+      <button onClick={() => changePage('home')}>Home</button>
+      <button onClick={() => changePage('about')}>About</button>
+      <button onClick={() => changePage('projects')}>Projects</button>
+      <button onClick={() => changePage('contact')}>Contact</button>
+      {currentPage === 'home' && (
+        <>
+          <h2>Welcome!</h2>
+          <p>This is my portfolio website, showcasing my projects and skills. Feel free to browse around.</p>
+        </>
+      )}
+      {currentPage === 'about' && (
+        <>
+          <h2>About Me</h2>
+          <p>I'm a full-stack web developer with a passion for creating beautiful, user-friendly websites.</p>
+        </>
+      )}
+      {currentPage === 'projects' && (
+        <>
+          <h2>My Projects</h2>
+          <p>Here are a few of my favorite projects I've built:</p>
+          <ul>
+            <li>Project 1</li>
+            <li>Project 2</li>
+            <li>Project 3</li>
+          </ul>
+        </>
+      )}
+      {currentPage === 'contact' && (
+        <>
+          <h2>Contact Me</h2>
+          <p>Interested in working with me, or just want to chat? Feel free to reach out!</p>
+          <p>Email: contact@example.com</p>
+        </>
+      )}
+    </div>
+  );
+};
+
+export default PortfolioPage;
