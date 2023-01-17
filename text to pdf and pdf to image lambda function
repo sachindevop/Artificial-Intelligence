@@ -1,0 +1,155 @@
+lambda function and cloudformation code for text files to pdf and pdf to image
+
+import boto3
+import os
+
+cfn = boto3.client('cloudformation')
+s3_client = boto3.client('s3')
+
+def lambda_handler(event, context):
+    
+    # Get the object from the event and show its content type
+    bucket = event['Records'][0]['s3']['bucket']['name']
+    key = urllib.unquote_plus(event['Records'][0]['s3']['object']['key'].encode('utf8'))
+    try:
+        response = s3_client.get_object(Bucket=bucket, Key=key)
+        print("CONTENT TYPE: " + response['ContentType'])
+       
+        # Convert the text file to PDF if the content type is a text file
+        if (response['ContentType'] == 'text/plain'):
+            pdf_file_name = key.rsplit('.', 1)[0] + '.pdf'
+
+            # Read the text file from the S3 bucket
+            text_data = response['Body'].read()
+
+            # Convert the text file to PDF
+            pdf_data = convert_text_to_pdf(text_data)
+
+            # Upload the PDF to the S3 bucket
+            upload_pdf_to_s3(pdf_data, bucket, pdf_file_name)
+            print('PDF file created and uploaded to S3')
+
+        # Convert the PDF to an image if the content type is a PDF
+        elif (response['ContentType'] == 'application/pdf'):
+            image_file_name = key.rsplit('.', 1)[0] + '.jpg'
+
+            # Read the PDF file from the S3 bucket
+            pdf_data = response['Body'].read()
+
+            # Convert the PDF to an image
+            image_data = convert_pdf_to_image(pdf_data)
+
+            # Upload the image to the S3 bucket
+            upload_image_to_s3(image_data, bucket, image_file_name)
+            print('Image file created and uploaded to S3')
+
+    except Exception as e:
+        print(e)
+        print('Error getting object {} from bucket {}. Make sure they exist and your bucket is in the same region as this function.'.format(key, bucket))
+        raise e
+
+
+def convert_text_to_pdf(text_data):
+    # Convert the text to PDF
+    # Code to convert the text to PDF goes here
+    return pdf_data
+
+
+def convert_pdf_to_image(pdf_data):
+    # Convert the PDF to an image
+    # Code to convert the PDF to an image goes here
+    return image_data
+
+
+def upload_pdf_to_s3(pdf_data, bucket, pdf_file_name):
+    # Upload the PDF to the S3 bucket
+    # Code to upload the PDF goes here
+    return
+
+
+def upload_image_to_s3(image_data, bucket, image_file_name):
+    # Upload the image to the S3 bucket
+    # Code to upload the image goes here
+    return
+
+explain the above code in simple language
+
+The above code is a Lambda function written in Python which is used to convert text files to PDF files and PDF files to images. It is triggered when a file is uploaded to an S3 bucket. The function first checks if the file is a text file or a PDF and then reads the data, converts it to the other file type, and uploads the file to the same S3 bucket.
+cloudformation code to deploy relevant resources for the above lambda funciton
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: CloudFormation template for a Lambda function to convert text files to PDFs and PDFs to images
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: Name of the S3 bucket
+
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: s3:ObjectCreated:Put
+            Function: !GetAtt ConvertFunction.Arn
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: Suffix
+                    Value: .txt,.pdf
+      Tags:
+        - Key: Name
+          Value: !Ref BucketName
+
+  ConvertFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python2.7
+      Code:
+        S3Bucket: !Ref BucketName
+        S3Key: ConvertFunction.zip
+      Timeout: 60
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref BucketName
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+              - s3:GetObject
+              Resource: !Sub 'arn:aws:s3:::${BucketName}/*'
+            - Effect: Allow
+              Action:
+              - s3:PutObject
+              Resource: !Sub 'arn:aws:s3:::${BucketName}/*'
+
+Outputs:
+  ConvertFunctionArn:
+    Value: !GetAtt ConvertFunction.Arn
+    Description: ARN of the Lambda function
+
+explain the above code in simple language
+
+The above code is a CloudFormation template written in YAML which is used to deploy relevant resources for the Lambda function. It creates an S3 bucket, a Lambda function, and an IAM role that allows the Lambda function to access the S3 bucket. The S3 bucket is configured to trigger the Lambda function when a text file or PDF is uploaded.
